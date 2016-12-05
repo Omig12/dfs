@@ -51,13 +51,13 @@ def delFromDFS(address, fname):
 		sockete.close()
 
 	print received
-	if received == "OK":
-		try: 
-			os.remove(fname)
-		except:
-			pass
-		else:
-			pass
+	# if received == "OK":
+	# 	try: 
+	# 		os.remove(fname)
+	# 	except:
+	# 		pass
+	# 	else:
+	# 		pass
 	
 	sock.close()
 

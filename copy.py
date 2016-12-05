@@ -11,6 +11,7 @@
 import socket
 import sys
 import os.path
+import codecs
 
 from Packet import *
 
