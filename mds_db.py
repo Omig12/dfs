@@ -41,7 +41,6 @@ class mds_db:
 		   Receives IP address and port 
 		   I.E. the information to connect to the data node
 		"""
-          
 		query = """insert into dnode (address, port) values ("%s", %s)""" % (address, port)
 		try:
 			self.c.execute(query)
@@ -68,7 +67,6 @@ class mds_db:
 		"""Returns a list of data node tuples (address, port).  Usefull to know to which 
 		   datanodes chunks can be send.
 		"""
-
 		query = """select address, port from dnode where 1"""
 		self.c.execute(query)
 		return self.c.fetchall()
@@ -96,6 +94,7 @@ class mds_db:
 			return result[0], result[1]
 		except:
 			return None, None
+
 
 	def GetFiles(self):
 		"""Returns the attributes of the files stored in the DFS"""
@@ -128,10 +127,32 @@ class mds_db:
 	           I.E. Attributes and the list of data blocks with all the information to access 
                    the blocks (node name, address, port, and the chunk of the file).
 		"""
-
 		fid, fsize = self.GetFileInfo(fname)
 		if not fid:
 			return None, None
 		query = """select address, port, cid from dnode, block where dnode.nid = block.nid and block.fid=%s""" % fid
 		self.c.execute(query)
 		return fsize, self.c.fetchall()
+	
+##################
+#				 #
+# For delete.py  #
+#				 #
+##################
+
+	def delFileInfo(self, fname):
+		"""Given a filename, if the file is stored in DFS
+     		   return its filename id and fsize.  Internal use only.
+		   Does not have to be accessed from the metadata server.
+		"""
+		fid, dummy1= self.GetFileInfo(fname) 
+		query1 = """delete from inode where fname="%s" """ % fname
+		query2 = """delete from block where fid == %s""" % (fid)
+		if not fid:
+			return 0
+		try:
+			self.c.execute(query1)
+			self.c.execute(query2)
+			return 1
+		except:
+			return 0

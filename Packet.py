@@ -13,19 +13,16 @@ import json
 class Packet:
 
 	def __init__(self):
-	
-		self.commands = ["reg", "list", "put", "get", "dblks"]
+		self.commands = ["reg", "list", "put", "get", "del", "dblks"]
 		self.packet = {}
 		
 	def getEncodedPacket(self):
 		"""returns a seriliazed packet ready to send through the network.  
 		First you need to build the packets.  See BuildXPacket functions."""
-
 		return json.dumps(self.packet) 
 
 	def getCommand(self):
 		"""Returns the command type of a packet"""
-
 		if self.packet.has_key("command"):
 			return self.packet["command"]
 		return None
@@ -47,29 +44,29 @@ class Packet:
 
 	def BuildRegPacket(self, addr, port):
 		"""Builds a registration packet"""
-		self.packet = {"command": "reg", "addr": addr, "port": port}
-		
+		self.packet = {"command": "reg", "addr": addr, "port": port}	
 
 	def BuildListPacket(self):
 		"""Builds a list packet for file listing"""
-
 		self.BuildCommand("list")
 
 	def BuildListResponse(self, lfiles):
 		"""Builds a list response packet"""
-
 		self.packet = {"files": lfiles}	
 
 	def getFileArray(self):
 		"""Builds a list response packet"""
-
 		if self.packet.has_key("files"):
 			return self.packet["files"]
-
 
 	def BuildGetPacket(self, fname):
 		"""Build a get packet to get fname."""
 		self.BuildCommand("get")
+		self.packet["fname"] = fname
+# Done
+	def BuildDelPacket(self, fname):
+		"""Build a get packet to del fname."""
+		self.BuildCommand("del")
 		self.packet["fname"] = fname
 
 	def BuildPutPacket(self, fname, fsize):
@@ -87,7 +84,13 @@ class Packet:
 	def BuildGetDataBlockPacket(self, blockid):
 		"""Builds a get data block packet. Usefull when requesting a data block to a data node."""
 		self.BuildCommand("get")
-		self.packet["blockid"] = blockid
+		self.packet["blockid"] = blockid		
+
+# Del stuff
+	def BuildDelDataBlockPacket(self, blockid):
+		"""Builds a del data block packet. Usefull when requesting to delete a data block from a data node."""
+		self.BuildCommand("del")
+		self.packet["blockid"] = blockid	
 
 	def getBlockID(self):
 		"""Returns a the block_id from a packet."""
@@ -101,7 +104,7 @@ class Packet:
 	def getFileName(self):
 		"""Returns the file name in a packet."""
 		if self.packet.has_key("fname"):
-			return self.packet["fname"] 
+			return self.packet["fname"]
 
 	def BuildGetResponse(self, metalist, fsize):
 		"""Builds a list of data node servers with the blocks of a file, and file size."""
@@ -112,6 +115,12 @@ class Packet:
 		"""Builds a list of data node servers where a file data blocks can be stored.
 		I.E. a list of available data servers."""
 		self.packet["servers"] = metalist
+
+# Del stuff
+	def BuildDelResponse(self, metalist, fsize):
+		"""Builds a list of data node servers with the blocks and file size of a file to be deleted."""
+		self.packet["servers"] = metalist
+		self.packet["fsize"] = fsize
 
 	def getDataNodes(self):
 		"""Returns a list of data servers"""

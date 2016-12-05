@@ -62,7 +62,7 @@ class MetadataTCPHandler(SocketServer.BaseRequestHandler):
 			self.request.sendall(p.getEncodedPacket())				
 		else:
 			self.request.sendall("DUP")
-	
+
 	def handle_get(self, db, p):
 		"""Check if file is in database and return list of
 			server nodes that contain the file.
@@ -78,6 +78,22 @@ class MetadataTCPHandler(SocketServer.BaseRequestHandler):
 			self.request.sendall(p.getEncodedPacket())
 		else:
 			self.request.sendall("NFOUND")
+	
+	def handle_del(self, db, p):
+		"""Delete a file from the database and send data nodes to delete
+		   the file.
+		"""   
+		# Fill code
+		fname = p.getFileName()
+		fsize, metalist= db.GetFileInode(fname)
+		print "File info: ", fname, fsize , metalist
+		if (fsize):
+			# Fill code
+			p.BuildDelResponse(metalist, fsize)
+			self.request.sendall(p.getEncodedPacket())
+		else:
+			self.request.sendall("NFOUND")
+		db.delFileInfo(fname)
 
 	def handle_blocks(self, db, p):
 		"""Add the data blocks to the file inode"""
@@ -131,6 +147,11 @@ class MetadataTCPHandler(SocketServer.BaseRequestHandler):
 			# Fill code
 			self.handle_get(db, p)
 
+		elif cmd == "del":
+			# Client asking for servers to get data
+			# Fill code
+			self.handle_del(db, p)
+
 		elif cmd == "dblks":
 			# Client sending data blocks for file
 			# Fill code
@@ -149,7 +170,6 @@ if __name__ == "__main__":
 			usage()
 
 	server = SocketServer.TCPServer((HOST, PORT), MetadataTCPHandler)
-
 	# Activate the server; this will keep running until you
 	# interrupt the program with Ctrl-C
 	server.serve_forever()

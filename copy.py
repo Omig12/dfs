@@ -36,62 +36,63 @@ def copyToDFS(address, fname, path):
 	sock.sendall(p.getEncodedPacket())
 
 	received = sock.recv(4096)
-	p.DecodePacket(received)
-	nodes = 0
-	for i in list(enumerate(p.getDataNodes(), start = 1)):
-		nodes += 1
-		print str(i).translate(None,'u[],\'()').replace(' ', "\t")
+	try:
+		p.DecodePacket(received)
+		nodes = 0
+		for i in list(enumerate(p.getDataNodes(), start = 1)):
+			nodes += 1
+			print str(i).translate(None,'u[],\'()').replace(' ', "\t")
 
-	# Read file
-	# Fill code
-	with open(path , 'r') as file:
-		s = file.read()
-	split = [s[i:i+(len(s)//nodes)] for i in range(0, len(s), len(s)//nodes)]
-	if (len(split) > nodes):
-		split[len(split)-2] += split[len(split) - 1]
-		split.pop()
-	print len(split), "\n" 
-	for j in split:
-		print j
+		# Read file
+		# Fill code
+		with open(path , 'r') as file:
+			s = file.read()
+		split = [s[i:i+(len(s)//nodes)] for i in range(0, len(s), len(s)//nodes)]
+		if (len(split) > nodes):
+			split[len(split)-2] += split[len(split) - 1]
+			split.pop()
+		print len(split), "\n" 
+		for j in split:
+			print j
 
+		# Create a Put packet with the fname and the length of the data,
+		# and sends it to the metadata server
+		# Fill code
+		blockid = []
+		x = 0
+		for n in p.getDataNodes():
+			sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sender.connect((str(n[0]), int(n[1])))
+			p.BuildPutPacket(fname, len(split[x]))
+			sender.sendall(p.getEncodedPacket())
+			print sender.recv(4096)
+			sender.close()
+			sp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sp.connect((str(n[0]), int(n[1])+1))
+			sp.sendall(split[x])
+			bid = sp.recv(4096)
+			blockid.append((str(n[0]), int(n[1]), bid))
+			sp.close()
+			x += 1
+		print blockid
+		
 
+		# If no error or file exists
+		# Get the list of data nodes.
+		# Divide the file in blocks
+		# Send the blocks to the data servers
+		# Fill code	
+		sen = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sen.connect(address)
 
+		# Notify the metadata server where the blocks are saved.
+		# Fill code
+		p.BuildDataBlockPacket(fname, blockid)
+		sen.sendall(p.getEncodedPacket())
+		sen.close()
 
-	# Create a Put packet with the fname and the length of the data,
-	# and sends it to the metadata server
-	# Fill code
-	blockid = []
-	x = 0
-	for n in p.getDataNodes():
-		sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sender.connect((str(n[0]), int(n[1])))
-		p.BuildPutPacket(fname, len(split[x]))
-		sender.sendall(p.getEncodedPacket())
-		print sender.recv(4096)
-		sender.close()
-		sp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sp.connect((str(n[0]), int(n[1])+1))
-		sp.sendall(split[x])
-		bid = sp.recv(4096)
-		blockid.append((str(n[0]), int(n[1]), bid))
-		sp.close()
-		x += 1
-	print blockid
-	
-
-	# If no error or file exists
-	# Get the list of data nodes.
-	# Divide the file in blocks
-	# Send the blocks to the data servers
-	# Fill code	
-	sen = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sen.connect(address)
-
-	# Notify the metadata server where the blocks are saved.
-	# Fill code
-	p.BuildDataBlockPacket(fname, blockid)
-	sen.sendall(p.getEncodedPacket())
-	sen.close()
+	except:
+		print received
 	
 def copyFromDFS(address, fname, path):
 	""" Contact the metadata server to ask for the file blocks of
@@ -109,15 +110,14 @@ def copyFromDFS(address, fname, path):
 	sock.connect(address) 
 	p = Packet()
 	p.BuildGetPacket(fname)
-
 	sock.sendall(p.getEncodedPacket())
 		
 	# Save the file
 	# Fill code
 	received = sock.recv(4096)
 	p.DecodePacket(received)
-	s = ""
 	# p.GetDataBlocks(received)
+	s = ""
 	for i, j, k in p.getDataNodes():
 		print i, j
 		sockete = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

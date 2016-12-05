@@ -14,6 +14,7 @@ import socket
 import SocketServer
 import uuid
 import os.path
+from os import remove
 
 def usage():
 	print """Usage: python %s <server> <port> <data path> <metadata port,default=8000>""" % sys.argv[0] 
@@ -100,6 +101,19 @@ class DataNodeTCPHandler(SocketServer.BaseRequestHandler):
 		# Fill code
 		self.request.send(data)
 
+	def handle_del(self, p):
+		
+		# Get the block id from the packet
+		blockid = p.getBlockID()
+
+		# Delete the file with the block id data
+		# Send it back to the copy client.
+		# Fill code
+		os.remove(blockid)
+		self.request.send("%s Deleted".format(blockid))
+
+
+
 	def handle(self):
 		msg = self.request.recv(4096)
 		print msg, type(msg)
@@ -113,6 +127,9 @@ class DataNodeTCPHandler(SocketServer.BaseRequestHandler):
 
 		elif cmd == "get":
 			self.handle_get(p)
+
+		elif cmd == "del":
+			self.handle_del(p)
 		
 
 if __name__ == "__main__":
