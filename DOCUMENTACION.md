@@ -21,7 +21,7 @@ server.
 The list python program allows users to list what files are currently stored on
 the distributed filesystem. It works by sending and encoded packet from the ls.py
 client to the meta data server, this packect contains the command list which then
-utilizes mds_db.py methods 
+utilizes mds_db.py methods.
 
 ### Copy Client
 
